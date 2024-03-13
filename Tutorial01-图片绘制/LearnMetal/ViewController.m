@@ -65,13 +65,16 @@
 - (void)setupVertex {
     static const LYVertex quadVertices[] =
     {   // 顶点坐标，分别是x、y、z、w；    纹理坐标，x、y；
-        { {  0.5, -0.5, 0.0, 1.0 },  { 1.f, 1.f } },
-        { { -0.5, -0.5, 0.0, 1.0 },  { 0.f, 1.f } },
-        { { -0.5,  0.5, 0.0, 1.0 },  { 0.f, 0.f } },
+        { {  0.5, -0.5, 0.0, 1 },  { 1.f, 1.f } },
+        { { -0.5, -0.5, 0.0, 1 },  { 0.f, 1.f } },
+        { { -0.5,  0.5, 0.0, 1 },  { 0.f, 0.f } },
         
-        { {  0.5, -0.5, 0.0, 1.0 },  { 1.f, 1.f } },
-        { { -0.5,  0.5, 0.0, 1.0 },  { 0.f, 0.f } },
-        { {  0.5,  0.5, 0.0, 1.0 },  { 1.f, 0.f } },
+        { {  0.5, -0.5, 0.0, 1 },  { 1.f, 1.f } },
+        { { -0.5,  0.5, 0.0, 1 },  { 0.f, 0.f } },
+        { {  0.5,  0.5, 0.0, 1 },  { 1.f, 0.f } },
+        
+//        { {  0.5, -0.5, 0.0, 1 },  { 1.f, 1.f } },
+
     };
     self.vertices = [self.mtkView.device newBufferWithBytes:quadVertices
                                                  length:sizeof(quadVertices)
@@ -130,13 +133,22 @@
 }
 
 - (void)drawInMTKView:(MTKView *)view {
+/**
+ The view calls the draw(in:) method whenever it’s time to update the view’s contents. In this method, 
+ you create a command buffer,
+ encode commands that tell the GPU what to draw and when to display it onscreen,
+ and enqueue that command buffer to be executed by the GPU.
+ 
+ This is sometimes referred to as drawing a frame. You can think of a frame as all of the work that goes into producing a single image that gets displayed on the screen. 
+ In an interactive app, like a game, you might draw many frames per second.
+ */
     // 每次渲染都要单独创建一个CommandBuffer
     id<MTLCommandBuffer> commandBuffer = [self.commandQueue commandBuffer];
     MTLRenderPassDescriptor *renderPassDescriptor = view.currentRenderPassDescriptor;
     // MTLRenderPassDescriptor描述一系列attachments的值，类似GL的FrameBuffer；同时也用来创建MTLRenderCommandEncoder
     if(renderPassDescriptor != nil)
     {
-        renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(0.0, 0.5, 0.5, 1.0f); // 设置默认颜色
+        renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(0.5, 0.5, 0.5, 1.0f); // 设置默认颜色
         id<MTLRenderCommandEncoder> renderEncoder = [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor]; //编码绘制指令的Encoder
         [renderEncoder setViewport:(MTLViewport){0.0, 0.0, self.viewportSize.x, self.viewportSize.y, -1.0, 1.0 }]; // 设置显示区域
         [renderEncoder setRenderPipelineState:self.pipelineState]; // 设置渲染管道，以保证顶点和片元两个shader会被调用
@@ -148,6 +160,14 @@
         [renderEncoder setFragmentTexture:self.texture
                                   atIndex:0]; // 设置纹理
         
+        /**
+         设置绘制方式，比如点、线、线带、三角形
+         不同的绘制方式，需要的点的数目会有区别，比如：
+         Line 方式，则 2 个点为一组，进行画线；
+         LineStrip方式，则将所有点按序连线
+         Triangle 方式，则 3 个点为一组
+         TriangleStrip方式，
+         */
         [renderEncoder drawPrimitives:MTLPrimitiveTypeTriangle
                           vertexStart:0
                           vertexCount:self.numVertices]; // 绘制
