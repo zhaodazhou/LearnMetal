@@ -19,6 +19,9 @@ typedef struct
     
 } RasterizerData;
 
+/**
+ You need to tell Metal which field in the rasterization data provides position data, because Metal doesn’t enforce any particular naming convention for fields in your struct. Annotate the position field with the [[position]] attribute qualifier to declare that this field holds the output position.
+ */
 vertex RasterizerData // 返回给片元着色器的结构体
 vertexShader(uint vertexID [[ vertex_id ]], // vertex_id是顶点shader每次处理的index，用于定位当前的顶点
              constant LYVertex *vertexArray [[ buffer(0) ]]) { // buffer表明是缓存数据，0是索引
@@ -28,6 +31,9 @@ vertexShader(uint vertexID [[ vertex_id ]], // vertex_id是顶点shader每次处
     return out;
 }
 
+/**
+ The fragment function simply passes the rasterization stage’s data to later stages so it doesn’t need any additional arguments.
+ */
 fragment float4
 samplingShader(RasterizerData input [[stage_in]], // stage_in表示这个数据来自光栅化。（光栅化是顶点处理之后的步骤，业务层无法修改）
                texture2d<half> colorTexture [[ texture(0) ]]) // texture表明是纹理数据，0是索引
